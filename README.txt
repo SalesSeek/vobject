@@ -201,7 +201,7 @@ serializing will add any required computable attributes (like 'VERSION')
     params for  EMAIL:
        TYPE ['INTERNET']
     FN: Jeffrey Harris
-    N:  Jeffrey  Harris 
+    N:  Jeffrey  Harris
 
 Parsing vCards
 ..............

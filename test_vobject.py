@@ -23,7 +23,7 @@ def additional_tests():
         package='__main__', optionflags=flags
     ))
     return suite
-    
+
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
     runner.run(additional_tests())
@@ -127,7 +127,7 @@ bday;value=date:1963-09-21
 o:Universit=E6t G=F6rlitz
 title:Mayor
 title;language=de;value=text:Burgermeister
-note:The Mayor of the great city of 
+note:The Mayor of the great city of
   Goerlitz in the great country of Germany.\nNext line.
 email;internet:mb@goerlitz.de
 home.tel;type=fax,voice;type=msg:+49 3581 123456
@@ -315,7 +315,7 @@ __test__ = { "Test readOne" :
     >>> ex1.serialize()
     'CN:Babs Jensen\r\nCN:Barbara J Jensen\r\nEMAIL:babs@umich.edu\r\nPHONE:+1 313 747-4454\r\nSN:Jensen\r\nX-ID:1234567890\r\n'
     """,
-    
+
     "Import icaltest" :
     r"""
     >>> c = base.readOne(icaltest, validate=True)
@@ -335,7 +335,7 @@ __test__ = { "Test readOne" :
     >>> vevent.rrule
     <RRULE{}FREQ=Weekly;COUNT=10>
     """,
-    
+
     "Parsing tests" :
     """
     >>> parseRDate = icalendar.MultiDateBehavior.transformToNative
@@ -352,7 +352,7 @@ __test__ = { "Test readOne" :
     >>> parseRDate(base.textLineToContentLine("RDATE;VALUE=PERIOD:19960403T020000Z/19960403T040000Z,19960404T010000Z/PT3H"))
     <RDATE{'VALUE': ['PERIOD']}[(datetime.datetime(1996, 4, 3, 2, 0, tzinfo=tzutc()), datetime.datetime(1996, 4, 3, 4, 0, tzinfo=tzutc())), (datetime.datetime(1996, 4, 4, 1, 0, tzinfo=tzutc()), datetime.timedelta(0, 10800))]>
     """,
-    
+
     "read failure" :
     """
     >>> vevent = base.readOne(badstream)
@@ -381,7 +381,7 @@ __test__ = { "Test readOne" :
     >>> badical.vevent.valarm.trigger.value
     datetime.datetime(2002, 10, 28, 12, 0, tzinfo=tzutc())
     """,
-    
+
     "unicode test" :
     r"""
     >>> f = resource_stream(__name__, 'test_files/utf8_test.ics')
@@ -391,7 +391,7 @@ __test__ = { "Test readOne" :
     >>> summary = vevent.summary.value
     >>> test = str(vevent.serialize()),
     """,
-    
+
     # make sure date valued UNTILs in rrules are in a reasonable timezone,
     # and include that day (12/28 in this test)
     "recurrence test" :
@@ -406,8 +406,8 @@ __test__ = { "Test readOne" :
     >>> dates[-1]
     datetime.datetime(2006, 12, 28, 23, 0, tzinfo=tzutc())
     """,
-             
-             
+
+
     "regular expression test" :
     """
     >>> re.findall(base.patterns['name'], '12foo-bar:yay')
@@ -426,9 +426,9 @@ __test__ = { "Test readOne" :
     >>> match.group('params')
     ';ALTREP="http://www.wiz.org"'
     """,
-    
+
     "VTIMEZONE creation test:" :
-        
+
     """
     >>> f = StringIO.StringIO(timezones)
     >>> tzs = dateutil.tz.tzical(f)
@@ -505,7 +505,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Create iCalendar from scratch" :
-             
+
     """
     >>> cal = base.newFromBehavior('vcalendar', '2.0')
     >>> cal.add('vevent')
@@ -529,7 +529,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Serializing with timezones test" :
-    
+
     """
     >>> from dateutil.rrule import rrule, rruleset, WEEKLY, MONTHLY
     >>> pacific = dateutil.tz.tzical(StringIO.StringIO(timezones)).get('US/Pacific')
@@ -630,9 +630,9 @@ __test__ = { "Test readOne" :
     END:VEVENT
     END:VCALENDAR
     """,
-    
+
     "Handling DATE without a VALUE=DATE" :
-    
+
     """
     >>> cal = base.readOne(badDtStartTest)
     >>> cal.vevent.dtstart.value
@@ -640,7 +640,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Serializing iCalendar to hCalendar" :
-    
+
     """
     >>> cal = base.newFromBehavior('hcalendar')
     >>> cal.behavior
@@ -679,7 +679,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Generate UIDs automatically test:" :
-             
+
     """
     >>> cal = base.newFromBehavior('vcalendar')
     >>> cal.add('vevent').add('dtstart').value = datetime.datetime(2006,2,2,10)
@@ -689,7 +689,7 @@ __test__ = { "Test readOne" :
     """,
 
     "VCARD 3.0 parse test:" :
-        
+
     r"""
     >>> card = base.readOne(vcardtest)
     >>> card.adr.value
@@ -717,9 +717,9 @@ __test__ = { "Test readOne" :
     TEL;TYPE=HOME:+01-(0)2-876.54.32
     END:VCARD
     """,
-             
+
     "Multi-text serialization test:" :
-             
+
     """
     >>> category = base.newFromBehavior('categories')
     >>> category.value = ['Random category']
@@ -729,18 +729,18 @@ __test__ = { "Test readOne" :
     >>> print category.serialize().strip()
     CATEGORIES:Random category,Other category
     """,
-             
+
     "Semi-colon separated multi-text serialization test:" :
-             
+
     """
     >>> requestStatus = base.newFromBehavior('request-status')
     >>> requestStatus.value = ['5.1', 'Service unavailable']
     >>> print requestStatus.serialize().strip()
     REQUEST-STATUS:5.1;Service unavailable
     """,
-             
+
     "vCard groups test:" :
-             
+
     """
     >>> card = base.readOne(vcardWithGroups)
     >>> card.group
@@ -761,7 +761,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Lowercase components test:" :
-             
+
     """
     >>> card = base.readOne(lowercaseComponentNames)
     >>> card.version
@@ -769,7 +769,7 @@ __test__ = { "Test readOne" :
     """,
 
     "Default behavior test" :
-             
+
     """
     >>> card = base.readOne(vcardWithGroups)
     >>> base.getBehavior('note') == None
