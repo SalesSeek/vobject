@@ -304,11 +304,11 @@ __test__ = { "Test readOne" :
     >>> silly.stuff
     <STUFF{}foldedline>
     >>> original = silly.serialize()
-    >>> f3 = StringIO.StringIO(original.decode("utf-8"))
+    >>> f3 = io.StringIO(original)
     >>> silly2 = base.readOne(f3)
     >>> silly2.serialize()==original
     True
-    >>> s3 = StringIO.StringIO('cn:Babs Jensen\r\ncn:Barbara J Jensen\r\nsn:Jensen\r\nemail:babs@umich.edu\r\nphone:+1 313 747-4454\r\nx-id:1234567890\r\n')
+    >>> s3 = io.StringIO('cn:Babs Jensen\r\ncn:Barbara J Jensen\r\nsn:Jensen\r\nemail:babs@umich.edu\r\nphone:+1 313 747-4454\r\nx-id:1234567890\r\n')
     >>> ex1 = base.readOne(s3, findBegin=False)
     >>> ex1
     <*unnamed*| [<CN{}Babs Jensen>, <CN{}Barbara J Jensen>, <EMAIL{}babs@umich.edu>, <PHONE{}+1 313 747-4454>, <SN{}Jensen>, <X-ID{}1234567890>]>
@@ -328,7 +328,7 @@ __test__ = { "Test readOne" :
     >>> c.vevent.dtstamp.value
     datetime.datetime(2002, 10, 28, 1, 17, 6, tzinfo=tzutc())
     >>> c.vevent.valarm.description.value
-    u'Event reminder, with comma\nand line feed'
+    'Event reminder, with comma\nand line feed'
     >>> c.vevent.valarm.description.serialize()
     'DESCRIPTION:Event reminder\\, with comma\\nand line feed\r\n'
     >>> vevent = c.vevent.transformFromNative()
@@ -358,11 +358,11 @@ __test__ = { "Test readOne" :
     >>> vevent = base.readOne(badstream)
     Traceback (most recent call last):
     ...
-    ParseError: At line 11: TRIGGER with no VALUE not recognized as DURATION or as DATE-TIME
+    vobject.base.ParseError: At line 11: TRIGGER with no VALUE not recognized as DURATION or as DATE-TIME
     >>> cal = base.readOne(badLineTest)
     Traceback (most recent call last):
     ...
-    ParseError: At line 6: Failed to parse line: X-BAD/SLASH:TRUE
+    vobject.base.ParseError: At line 6: Failed to parse line: X-BAD/SLASH:TRUE
     >>> cal = base.readOne(badLineTest, ignoreUnreadable=True)
     >>> cal.vevent.x_bad_slash
     Traceback (most recent call last):
@@ -377,7 +377,7 @@ __test__ = { "Test readOne" :
 
     >>> badical = base.readOne(icalWeirdTrigger)
     >>> badical.vevent.valarm.description.value
-    u'This trigger is a date-time without a VALUE=DATE-TIME parameter'
+    'This trigger is a date-time without a VALUE=DATE-TIME parameter'
     >>> badical.vevent.valarm.trigger.value
     datetime.datetime(2002, 10, 28, 12, 0, tzinfo=tzutc())
     """,
@@ -387,7 +387,7 @@ __test__ = { "Test readOne" :
     >>> f = resource_stream(__name__, 'test_files/utf8_test.ics')
     >>> vevent = base.readOne(f).vevent
     >>> vevent.summary.value
-    u'The title \u3053\u3093\u306b\u3061\u306f\u30ad\u30c6\u30a3'
+    'The title \u3053\u3093\u306b\u3061\u306f\u30ad\u30c6\u30a3'
     >>> summary = vevent.summary.value
     >>> test = str(vevent.serialize()),
     """,
@@ -430,14 +430,14 @@ __test__ = { "Test readOne" :
     "VTIMEZONE creation test:" :
 
     """
-    >>> f = StringIO.StringIO(timezones)
+    >>> f = io.StringIO(timezones)
     >>> tzs = dateutil.tz.tzical(f)
     >>> tzs.get("US/Pacific")
     <tzicalvtz 'US/Pacific'>
     >>> icalendar.TimezoneComponent(_)
     <VTIMEZONE | <TZID{}US/Pacific>>
     >>> pacific = _
-    >>> print pacific.serialize()
+    >>> print(pacific.serialize())
     BEGIN:VTIMEZONE
     TZID:US/Pacific
     BEGIN:STANDARD
@@ -459,7 +459,7 @@ __test__ = { "Test readOne" :
     <VTIMEZONE | <TZID{}US/Pacific>>
     >>> santiago = icalendar.TimezoneComponent(tzs.get('Santiago'))
     >>> ser = santiago.serialize()
-    >>> print ser
+    >>> print(ser)
     BEGIN:VTIMEZONE
     TZID:Santiago
     BEGIN:STANDARD
@@ -477,14 +477,14 @@ __test__ = { "Test readOne" :
     TZOFFSETTO:-0300
     END:DAYLIGHT
     END:VTIMEZONE
-    >>> roundtrip = dateutil.tz.tzical(StringIO.StringIO(str(ser))).get()
+    >>> roundtrip = dateutil.tz.tzical(io.StringIO(str(ser))).get()
     >>> for year in range(2001, 2010):
     ...     for month in (2, 9):
     ...         dt = datetime.datetime(year, month, 15, tzinfo = roundtrip)
     ...         if dt.replace(tzinfo=tzs.get('Santiago')) != dt:
-    ...             print "Failed for:", dt
+    ...             print("Failed for:", dt)
     >>> fict = icalendar.TimezoneComponent(tzs.get('US/Fictitious-Eastern'))
-    >>> print fict.serialize()
+    >>> print(fict.serialize())
     BEGIN:VTIMEZONE
     TZID:US/Fictitious-Eastern
     BEGIN:STANDARD
@@ -512,10 +512,10 @@ __test__ = { "Test readOne" :
     <VEVENT| []>
     >>> cal.vevent.add('dtstart').value = datetime.datetime(2006, 5, 9)
     >>> cal.vevent.add('description').value = "Test event"
-    >>> pacific = dateutil.tz.tzical(StringIO.StringIO(timezones)).get('US/Pacific')
+    >>> pacific = dateutil.tz.tzical(io.StringIO(timezones)).get('US/Pacific')
     >>> cal.vevent.add('created').value = datetime.datetime(2006, 1, 1, 10, tzinfo=pacific)
     >>> cal.vevent.add('uid').value = "Not very random UID"
-    >>> print cal.serialize()
+    >>> print(cal.serialize())
     BEGIN:VCALENDAR
     VERSION:2.0
     PRODID:-//PYVOBJECT//NONSGML Version 1//EN
@@ -532,7 +532,7 @@ __test__ = { "Test readOne" :
 
     """
     >>> from dateutil.rrule import rrule, rruleset, WEEKLY, MONTHLY
-    >>> pacific = dateutil.tz.tzical(StringIO.StringIO(timezones)).get('US/Pacific')
+    >>> pacific = dateutil.tz.tzical(io.StringIO(timezones)).get('US/Pacific')
     >>> cal = base.Component('VCALENDAR')
     >>> cal.setBehavior(icalendar.VCalendar2_0)
     >>> ev = cal.add('vevent')
@@ -543,7 +543,7 @@ __test__ = { "Test readOne" :
     >>> set.exdate(datetime.datetime(2005, 10, 14, 9, tzinfo = pacific))
     >>> ev.rruleset = set
     >>> ev.add('duration').value = datetime.timedelta(hours=1)
-    >>> print cal.serialize()
+    >>> print(cal.serialize())
     BEGIN:VCALENDAR
     VERSION:2.0
     PRODID:-//PYVOBJECT//NONSGML Version 1//EN
@@ -569,13 +569,13 @@ __test__ = { "Test readOne" :
     DTSTART;TZID=US/Pacific:20051012T090000
     DURATION:PT1H
     EXDATE;TZID=US/Pacific:20051014T090000
-    RRULE:FREQ=WEEKLY;BYDAY=WE,FR;INTERVAL=2;UNTIL=20051215T090000
+    RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=20051215T090000;BYDAY=WE,FR
     RRULE:FREQ=MONTHLY;BYMONTHDAY=-1,-5
     END:VEVENT
     END:VCALENDAR
-    >>> apple = dateutil.tz.tzical(StringIO.StringIO(timezones)).get('America/Montreal')
+    >>> apple = dateutil.tz.tzical(io.StringIO(timezones)).get('America/Montreal')
     >>> ev.dtstart.value = datetime.datetime(2005, 10, 12, 9, tzinfo = apple)
-    >>> print cal.serialize()
+    >>> print(cal.serialize())
     BEGIN:VCALENDAR
     VERSION:2.0
     PRODID:-//PYVOBJECT//NONSGML Version 1//EN
@@ -625,7 +625,7 @@ __test__ = { "Test readOne" :
     DTSTART;TZID=America/Montreal:20051012T090000
     DURATION:PT1H
     EXDATE;TZID=US/Pacific:20051014T090000
-    RRULE:FREQ=WEEKLY;BYDAY=WE,FR;INTERVAL=2;UNTIL=20051215T090000
+    RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=20051215T090000;BYDAY=WE,FR
     RRULE:FREQ=MONTHLY;BYMONTHDAY=-1,-5
     END:VEVENT
     END:VCALENDAR
@@ -645,7 +645,7 @@ __test__ = { "Test readOne" :
     >>> cal = base.newFromBehavior('hcalendar')
     >>> cal.behavior
     <class 'vobject.hcalendar.HCalendar'>
-    >>> pacific = dateutil.tz.tzical(StringIO.StringIO(timezones)).get('US/Pacific')
+    >>> pacific = dateutil.tz.tzical(io.StringIO(timezones)).get('US/Pacific')
     >>> cal.add('vevent')
     <VEVENT| []>
     >>> cal.vevent.add('summary').value = "this is a note"
@@ -660,7 +660,7 @@ __test__ = { "Test readOne" :
     >>> event2.add('location').value = "somewhere else"
     >>> event2.add('dtend').value = event2.dtstart.value + datetime.timedelta(days = 6)
     >>> hcal = cal.serialize()
-    >>> print hcal
+    >>> print(hcal)
     <span class="vevent">
        <a class="url" href="http://microformats.org/code/hcalendar/creator">
           <span class="summary">this is a note</span>:
@@ -694,14 +694,14 @@ __test__ = { "Test readOne" :
     >>> card = base.readOne(vcardtest)
     >>> card.adr.value
     <Address: Haight Street 512;\nEscape, Test\nNovosibirsk,  80214\nGnuland>
-    >>> print card.adr.value
+    >>> print(card.adr.value)
     Haight Street 512;
     Escape, Test
     Novosibirsk,  80214
     Gnuland
     >>> card.org.value
-    [u'University of Novosibirsk, Department of Octopus Parthenogenesis']
-    >>> print card.serialize()
+    ['University of Novosibirsk, Department of Octopus Parthenogenesis']
+    >>> print(card.serialize())
     BEGIN:VCARD
     VERSION:3.0
     ACCOUNT;TYPE=HOME:010-1234567-05
@@ -723,10 +723,10 @@ __test__ = { "Test readOne" :
     """
     >>> category = base.newFromBehavior('categories')
     >>> category.value = ['Random category']
-    >>> print category.serialize().strip()
+    >>> print(category.serialize().strip())
     CATEGORIES:Random category
     >>> category.value.append('Other category')
-    >>> print category.serialize().strip()
+    >>> print(category.serialize().strip())
     CATEGORIES:Random category,Other category
     """,
 
@@ -735,7 +735,7 @@ __test__ = { "Test readOne" :
     """
     >>> requestStatus = base.newFromBehavior('request-status')
     >>> requestStatus.value = ['5.1', 'Service unavailable']
-    >>> print requestStatus.serialize().strip()
+    >>> print(requestStatus.serialize().strip())
     REQUEST-STATUS:5.1;Service unavailable
     """,
 
@@ -744,9 +744,9 @@ __test__ = { "Test readOne" :
     """
     >>> card = base.readOne(vcardWithGroups)
     >>> card.group
-    u'home'
+    'home'
     >>> card.tel.group
-    u'home'
+    'home'
     >>> card.group = card.tel.group = 'new'
     >>> card.tel.serialize().strip()
     'new.TEL;TYPE=fax,voice,msg:+49 3581 123456'
@@ -757,7 +757,7 @@ __test__ = { "Test readOne" :
     >>> dtstart.serialize()
     Traceback (most recent call last):
     ...
-    VObjectError: "<DTSTART{}> has a group, but this object doesn't support groups"
+    vobject.base.VObjectError: "<DTSTART{}> has a group, but this object doesn't support groups"
     """,
 
     "Lowercase components test:" :
@@ -776,7 +776,7 @@ __test__ = { "Test readOne" :
     True
     >>> card.note.behavior
     <class 'vobject.vcard.VCardTextBehavior'>
-    >>> print card.note.value
+    >>> print(card.note.value)
     The Mayor of the great city of  Goerlitz in the great country of Germany.
     Next line.
     """

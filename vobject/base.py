@@ -1,11 +1,12 @@
 """vobject module for reading vCard and vCalendar files."""
 
+import collections
 import copy
 import re
 import sys
 import logging
 import io
-import exceptions
+import quopri
 import codecs
 
 #------------------------------------ Logging ----------------------------------
@@ -189,7 +190,7 @@ class VBase(object):
 
 def ascii(s):
     """Turn s into a printable string.  Won't work for 8-bit ASCII."""
-    return str(s).encode('ascii', 'replace')
+    return str(s).encode('ascii', 'replace').decode('ascii')
 
 def toVName(name, stripNum = 0, upper = False):
     """
@@ -206,7 +207,7 @@ class ContentLine(VBase):
     """Holds one content line for formats like vCard and vCalendar.
 
     For example::
-      <SUMMARY{u'param1' : [u'val1'], u'param2' : [u'val2']}Bastille Day Party>
+      <SUMMARY{'param1' : ['val1'], 'param2' : ['val2']}Bastille Day Party>
 
     @ivar name:
         The uppercased name of the contentline.
@@ -236,7 +237,7 @@ class ContentLine(VBase):
         self.name        = name.upper()
         self.value       = value
         self.encoded     = encoded
-        self.params      = {}
+        self.params      = collections.OrderedDict()
         self.singletonparams = []
         self.isNative = isNative
         self.lineNumber = lineNumber
@@ -258,18 +259,18 @@ class ContentLine(VBase):
             qp = True
             self.singletonparams.remove('QUOTED-PRINTABLE')
         if qp:
-            self.value = str(self.value).decode('quoted-printable')
+            self.value = quopri.decodestring(self.value)
 
         # self.value should be unicode for iCalendar, but if quoted-printable
         # is used, or if the quoted-printable state machine is used, text may be
         # encoded
-        if type(self.value) is str:
+        if type(self.value) is bytes:
             charset = 'iso-8859-1'
             if 'CHARSET' in self.params:
                 charsets = self.params.pop('CHARSET')
                 if charsets:
                     charset = charsets[0]
-            self.value = str(self.value, charset)
+            self.value = self.value.decode(charset)
 
     @classmethod
     def duplicate(clz, copyit):
@@ -320,9 +321,9 @@ class ContentLine(VBase):
             elif name.endswith('_paramlist'):
                 return self.params[toVName(name, 10, True)]
             else:
-                raise exceptions.AttributeError(name)
+                raise AttributeError(name)
         except KeyError:
-            raise exceptions.AttributeError(name)
+            raise AttributeError(name)
 
     def __setattr__(self, name, value):
         """Make params accessible via self.foo_param or self.foo_paramlist.
@@ -357,7 +358,7 @@ class ContentLine(VBase):
             else:
                 object.__delattr__(self, name)
         except KeyError:
-            raise exceptions.AttributeError(name)
+            raise AttributeError(name)
 
     def valueRepr( self ):
         """transform the representation of the value according to the behavior,
@@ -368,7 +369,10 @@ class ContentLine(VBase):
         return ascii( v )
 
     def __str__(self):
-        return "<"+ascii(self.name)+ascii(self.params)+self.valueRepr()+">"
+        items = ', '.join('{k!r}: {v!r}'.format(k=k, v=v)
+                          for k, v in self.params.items())
+        params = '{{{items}}}'.format(items=items)
+        return "<"+ascii(self.name)+ascii(params)+self.valueRepr()+">"
 
     def __repr__(self):
         return self.__str__().replace('\n', '\\n')
@@ -473,7 +477,7 @@ class Component(VBase):
             else:
                 return self.contents[toVName(name)][0]
         except KeyError:
-            raise exceptions.AttributeError(name)
+            raise AttributeError(name)
 
     normal_attributes = ['contents','name','behavior','parentBehavior','group']
     def __setattr__(self, name, value):
@@ -509,7 +513,7 @@ class Component(VBase):
             else:
                 object.__delattr__(self, name)
         except KeyError:
-            raise exceptions.AttributeError(name)
+            raise AttributeError(name)
 
     def getChildValue(self, childName, default = None, childNumber = 0):
         """Return a child's value (the first, by default), or None."""
@@ -623,7 +627,7 @@ class Component(VBase):
         pre = ' ' * level * tabwidth
         print(pre, self.name)
         if isinstance(self, Component):
-            for line in self.getChildren():
+            for line in self.getSortedChildren():
                 line.prettyPrint(level + 1, tabwidth)
         print()
 
@@ -749,7 +753,7 @@ def parseLine(line, lineNumber = None):
     >>> parseLine(":")
     Traceback (most recent call last):
     ...
-    ParseError: 'Failed to parse line: :'
+    vobject.base.ParseError: 'Failed to parse line: :'
     """
 
     match = line_re.match(line)
@@ -795,10 +799,10 @@ def getLogicalLines(fp, allowQP=True, findBegin=False):
 
     Quoted-printable data will be decoded in the Behavior decoding phase.
 
-    >>> import StringIO
-    >>> f=StringIO.StringIO(testLines)
+    >>> import io
+    >>> f=io.StringIO(testLines)
     >>> for n, l in enumerate(getLogicalLines(f)):
-    ...     print "Line %s: %s" % (n, l[0])
+    ...     print("Line %s: %s" % (n, l[0]))
     ...
     Line 0: Line 0 text, Line 0 continued.
     Line 1: Line 1;encoding=quoted-printable:this is an evil=
@@ -852,7 +856,7 @@ def getLogicalLines(fp, allowQP=True, findBegin=False):
                 line = line.rstrip(CRLF)
                 lineNumber += 1
             if line.rstrip() == '':
-                if logicalLine.pos > 0:
+                if logicalLine.tell() > 0:
                     yield logicalLine.getvalue(), lineStartNumber
                 lineStartNumber = lineNumber
                 logicalLine = newbuffer()
@@ -865,7 +869,7 @@ def getLogicalLines(fp, allowQP=True, findBegin=False):
                 quotedPrintable=False
             elif line[0] in SPACEORTAB:
                 logicalLine.write(line[1:])
-            elif logicalLine.pos > 0:
+            elif logicalLine.tell() > 0:
                 yield logicalLine.getvalue(), lineStartNumber
                 lineStartNumber = lineNumber
                 logicalLine = newbuffer()
@@ -881,7 +885,7 @@ def getLogicalLines(fp, allowQP=True, findBegin=False):
             if val[-1]=='=' and val.lower().find('quoted-printable') >= 0:
                 quotedPrintable=True
 
-        if logicalLine.pos > 0:
+        if logicalLine.tell() > 0:
             yield logicalLine.getvalue(), lineStartNumber
 
 
@@ -918,7 +922,7 @@ def foldOneLine(outbuf, input, lineLength = 75):
                 written = len(input)
             else:
                 # Check whether next char is valid utf8 lead byte
-                while (input[offset] > 0x7F) and ((ord(input[offset]) & 0xC0) == 0x80):
+                while (ord(input[offset]) > 0x7F) and ((ord(input[offset]) & 0xC0) == 0x80):
                     # Step back until we have a valid char
                     offset -= 1
 
@@ -950,7 +954,7 @@ def defaultSerialize(obj, buf, lineLength):
     elif isinstance(obj, ContentLine):
         startedEncoded = obj.encoded
         if obj.behavior and not startedEncoded: obj.behavior.encode(obj)
-        s=codecs.getwriter('utf-8')(io.StringIO()) #unfolded buffer
+        s=io.StringIO() #unfolded buffer
         if obj.group is not None:
             s.write(obj.group + '.')
         s.write(obj.name.upper())
@@ -1000,13 +1004,13 @@ def readComponents(streamOrString, validate=False, transform=True,
                    allowQP=False):
     """Generate one Component at a time from a stream.
 
-    >>> import StringIO
-    >>> f = StringIO.StringIO(testVCalendar)
-    >>> cal=readComponents(f).next()
+    >>> import io
+    >>> f = io.StringIO(testVCalendar)
+    >>> cal=next(readComponents(f))
     >>> cal
-    <VCALENDAR| [<VEVENT| [<SUMMARY{u'BLAH': [u'hi!']}Bastille Day Party>]>]>
+    <VCALENDAR| [<VEVENT| [<SUMMARY{'BLAH': ['hi!']}Bastille Day Party>]>]>
     >>> cal.vevent.summary
-    <SUMMARY{u'BLAH': [u'hi!']}Bastille Day Party>
+    <SUMMARY{'BLAH': ['hi!']}Bastille Day Party>
 
     """
     if isinstance(streamOrString, str):
@@ -1028,7 +1032,7 @@ def readComponents(streamOrString, validate=False, transform=True,
                     else:
                         msg = "Skipped a line, message: %(msg)s"
                     logger.error(msg % {'lineNumber' : e.lineNumber,
-                                        'msg' : e.message})
+                                        'msg' : e.msg})
                     continue
             else:
                 vline = textLineToContentLine(line, n)

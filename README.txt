@@ -98,7 +98,7 @@ given name by appending _list to the attribute name:
 
 >>> cal.add('vevent').add('summary').value = "Second VEVENT"
 >>> for ev in cal.vevent_list:
-...     print ev.summary.value
+...     print(ev.summary.value)
 This is a note
 Second VEVENT
 
@@ -129,7 +129,7 @@ Components and ContentLines have serialize methods:
 
 >>> cal.vevent.add('uid').value = 'Sample UID'
 >>> icalstream = cal.serialize()
->>> print icalstream
+>>> print(icalstream)
 BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//PYVOBJECT//NONSGML Version 1//EN
@@ -160,7 +160,7 @@ datetime.datetime(2006, 2, 16, 0, 0, tzinfo=tzutc())
 Similarly, readComponents is a generator yielding one top level
 component at a time from a stream or string.
 
->>> vobject.readComponents(icalstream).next().vevent.dtstart.value
+>>> next(vobject.readComponents(icalstream)).vevent.dtstart.value
 datetime.datetime(2006, 2, 16, 0, 0, tzinfo=tzutc())
 
 More examples can be found in source code doctests.
@@ -220,8 +220,8 @@ Parsing vCards
     VERSION: 3.0
     EMAIL: jeffrey@osafoundation.org
     params for  EMAIL:
-       TYPE [u'INTERNET']
+       TYPE ['INTERNET']
     FN: Jeffrey Harris
     N:  Jeffrey  Harris
 >>> v.n.value.family
-u'Harris'
+'Harris'

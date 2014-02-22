@@ -1,7 +1,7 @@
 """Definitions and behavior for iCalendar, also known as vCalendar 2.0"""
 
-import string
 from . import behavior
+import collections
 import dateutil.rrule
 import dateutil.tz
 import io
@@ -32,7 +32,7 @@ __tzidMap={}
 
 def toUnicode(s):
     """Take a string or unicode, turn it into unicode, decoding as utf-8"""
-    if isinstance(s, str):
+    if isinstance(s, bytes):
         s = s.decode('utf-8')
     return s
 
@@ -184,7 +184,7 @@ class TimezoneComponent(Component):
                             'weekday' : transition.weekday(),
                             'hour'    : transition.hour,
                             'name'    : tzinfo.tzname(transition),
-                            'plus'    : (transition.day - 1)/ 7 + 1,#nth week of the month
+                            'plus'    : (transition.day - 1) // 7 + 1,#nth week of the month
                             'minus'   : fromLastWeek(transition), #nth from last week
                             'offset'  : tzinfo.utcoffset(transition),
                             'offsetfrom' : old_offset}
@@ -502,7 +502,7 @@ class RecurringComponent(Component):
                     buf.write('FREQ=')
                     buf.write(FREQUENCIES[rule._freq])
 
-                    values = {}
+                    values = collections.OrderedDict()
 
                     if rule._interval != 1:
                         values['INTERVAL'] = [str(rule._interval)]
@@ -1087,9 +1087,9 @@ class VFreeBusy(VCalendarComponentBehavior):
     >>> vfb.add('uid').value = 'test'
     >>> vfb.add('dtstart').value = datetime.datetime(2006, 2, 16, 1, tzinfo=utc)
     >>> vfb.add('dtend').value   = vfb.dtstart.value + twoHours
-    >>> vfb.add('freebusy').value = [(vfb.dtstart.value, twoHours / 2)]
+    >>> vfb.add('freebusy').value = [(vfb.dtstart.value, twoHours // 2)]
     >>> vfb.add('freebusy').value = [(vfb.dtstart.value, vfb.dtend.value)]
-    >>> print vfb.serialize()
+    >>> print(vfb.serialize())
     BEGIN:VFREEBUSY
     UID:test
     DTSTART:20060216T010000Z
@@ -1244,7 +1244,7 @@ class VAvailability(VCalendarComponentBehavior):
     >>> av.add('dtend').value   = datetime.datetime(2006, 2, 16, 12, tzinfo=utc)
     >>> av.add('summary').value = "Available in the morning"
     >>> ignore = vav.add(av)
-    >>> print vav.serialize()
+    >>> print(vav.serialize())
     BEGIN:VAVAILABILITY
     UID:test
     DTSTART:20060216T000000Z
@@ -1434,7 +1434,7 @@ class PeriodBehavior(behavior.Behavior):
     >>> line.transformToNative().value
     [(datetime.datetime(2006, 2, 16, 10, 0), datetime.timedelta(0, 7200))]
     >>> line.value.append((datetime.datetime(2006, 5, 16, 10), twoHours))
-    >>> print line.serialize().strip()
+    >>> print(line.serialize().strip())
     TEST:20060216T100000/PT2H,20060516T100000/PT2H
     """
     hasNative = True
@@ -1520,11 +1520,11 @@ def numToDigits(num, places):
 def timedeltaToString(delta):
     """Convert timedelta to an rfc2445 DURATION."""
     if delta.days == 0: sign = 1
-    else: sign = delta.days / abs(delta.days)
+    else: sign = delta.days // abs(delta.days)
     delta = abs(delta)
     days = delta.days
-    hours = delta.seconds / 3600
-    minutes = (delta.seconds % 3600) / 60
+    hours = delta.seconds // 3600
+    minutes = (delta.seconds % 3600) // 60
     seconds = delta.seconds % 60
     out = ''
     if sign == -1: out = '-'
@@ -1574,7 +1574,7 @@ def dateTimeToString(dateTime, convertToUTC=False):
 
 def deltaToOffset(delta):
     absDelta = abs(delta)
-    hours = absDelta.seconds / 3600
+    hours = absDelta.seconds // 3600
     hoursString      = numToDigits(hours, 2)
     minutesString    = '00'
     if absDelta == delta:
@@ -1594,8 +1594,8 @@ def periodToString(period, convertToUTC=False):
 #----------------------- Parsing functions -------------------------------------
 
 def isDuration(s):
-    s = string.upper(s)
-    return (string.find(s, "P") != -1) and (string.find(s, "P") < 2)
+    s = s.upper()
+    return (s.find("P") != -1) and (s.find("P") < 2)
 
 def stringToDate(s):
     year  = int( s[0:4] )
@@ -1743,7 +1743,7 @@ def stringToDurations(s, strict=False):
             elif char == "eof":
                 state = "error"
                 error("got end-of-line while reading in duration: " + s)
-            elif char in string.digits:
+            elif char.isdigit():
                 state = "read field"
                 current = current + char   #update this part when updating "read field"
             else:
@@ -1752,7 +1752,7 @@ def stringToDurations(s, strict=False):
                 error("got unexpected character %s reading in duration: %s" % (char, s))
 
         elif state == "read field":
-            if (char in string.digits):
+            if (char.isdigit()):
                 state = "read field"
                 current = current + char   #update part above when updating "read field"
             elif char.upper() == 'T':
@@ -1830,7 +1830,7 @@ def parseDtstart(contentline, allowSignatureMismatch=False):
                 raise
 
 def stringToPeriod(s, tzinfo=None):
-    values   = string.split(s, "/")
+    values   = s.split("/")
     start = stringToDateTime(values[0], tzinfo)
     valEnd   = values[1]
     if isDuration(valEnd): #period-start = date-time "/" dur-value
