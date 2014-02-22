@@ -2,7 +2,7 @@
 
 import vobject
 from vobject import base, icalendar, behavior, vcard, hcalendar
-import StringIO, re, dateutil.tz, datetime
+import io, re, dateutil.tz, datetime
 
 import doctest, test_vobject, unittest
 
