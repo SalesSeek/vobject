@@ -390,7 +390,8 @@ class RecurringComponent(Component):
 
                 if name in DATENAMES:
                     if type(line.value[0]) == datetime.datetime:
-                        list(map(addfunc, line.value))
+                        for value in line.value:
+                            addfunc(value)
                     elif type(line.value[0]) == datetime.date:
                         for dt in line.value:
                             addfunc(
@@ -1566,11 +1567,12 @@ registerBehavior(RRule, 'EXRULE')
 #------------------------ Registration of common classes ----------------------
 
 utcDateTimeList = ['LAST-MODIFIED', 'CREATED', 'COMPLETED', 'DTSTAMP']
-list(map(lambda x: registerBehavior(UTCDateTimeBehavior, x), utcDateTimeList))
+for utc_date_time in utcDateTimeList:
+    registerBehavior(UTCDateTimeBehavior, utc_date_time)
 
 dateTimeOrDateList = ['DTEND', 'DTSTART', 'DUE', 'RECURRENCE-ID']
-list(map(lambda x: registerBehavior(DateOrDateTimeBehavior, x),
-         dateTimeOrDateList))
+for date_time_or_date in dateTimeOrDateList:
+    registerBehavior(DateOrDateTimeBehavior, date_time_or_date)
 
 registerBehavior(MultiDateBehavior, 'RDATE')
 registerBehavior(MultiDateBehavior, 'EXDATE')
@@ -1579,10 +1581,12 @@ registerBehavior(MultiDateBehavior, 'EXDATE')
 textList = ['CALSCALE', 'METHOD', 'PRODID', 'CLASS', 'COMMENT', 'DESCRIPTION',
             'LOCATION', 'STATUS', 'SUMMARY', 'TRANSP', 'CONTACT', 'RELATED-TO',
             'UID', 'ACTION', 'BUSYTYPE']
-list(map(lambda x: registerBehavior(TextBehavior, x), textList))
+for text in textList:
+    registerBehavior(TextBehavior, text)
 
 multiTextList = ['CATEGORIES', 'RESOURCES']
-list(map(lambda x: registerBehavior(MultiTextBehavior, x), multiTextList))
+for multi_text in multiTextList:
+    registerBehavior(MultiTextBehavior, multi_text)
 registerBehavior(SemicolonMultiTextBehavior, 'REQUEST-STATUS')
 
 
