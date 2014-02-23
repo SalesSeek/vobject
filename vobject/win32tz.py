@@ -165,7 +165,7 @@ def valuesToDict(key):
 
 
 def _test():
-    import win32tz
+    from . import win32tz
     import doctest
     doctest.testmod(win32tz, verbose=0)
 
