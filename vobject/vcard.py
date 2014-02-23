@@ -1,13 +1,13 @@
 """Definitions and behavior for vCard 3.0"""
-
 from . import behavior
-
-from .base import (
-    VObjectError, NativeError, ValidateError, ParseError, VBase, Component,
-    ContentLine, logger, defaultSerialize, registerBehavior, backslashEscape,
-    ascii
-)
+from .base import ContentLine, registerBehavior, backslashEscape, ascii
 from .icalendar import stringToTextValues
+# symbols imported into namespace but not used locally
+from .base import (  # noqa
+    Component, defaultSerialize, NativeError, ParseError, ValidateError, VBase,
+    VObjectError,
+)
+
 
 #------------------------ vCard structs ---------------------------------------
 

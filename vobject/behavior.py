@@ -1,5 +1,4 @@
 """Behavior (validation, encoding, and transformations) for vobjects."""
-
 from . import base
 
 

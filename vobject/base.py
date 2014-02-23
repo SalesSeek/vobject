@@ -1,13 +1,13 @@
 """vobject module for reading vCard and vCalendar files."""
-
+import codecs
 import collections
 import copy
+import io
+import logging
+import quopri
 import re
 import sys
-import logging
-import io
-import quopri
-import codecs
+
 
 #------------------------------------ Logging ---------------------------------
 logger = logging.getLogger(__name__)

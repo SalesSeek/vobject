@@ -76,9 +76,10 @@ VObject Overview
     END:VCALENDAR
 
 """
-
+from .base import newFromBehavior
+# symbols imported into namepsace but unused locally
 from . import base, icalendar, vcard  # noqa
-from .base import readComponents, readOne, newFromBehavior  # noqa
+from .base import readComponents, readOne  # noqa
 
 
 def iCalendar():

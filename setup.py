@@ -46,11 +46,11 @@ For older changes, see
    - http://websvn.osafoundation.org/listing.php?repname=vobject&path=/trunk/
 
 """
-
 from ez_setup import use_setuptools
 use_setuptools()
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 
 doclines = __doc__.splitlines()
 

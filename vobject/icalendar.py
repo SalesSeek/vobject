@@ -1,19 +1,21 @@
 """Definitions and behavior for iCalendar, also known as vCalendar 2.0"""
-
-from . import behavior
 import collections
+import datetime
+import io
+import random  # for generating a UID
+import socket
+
 import dateutil.rrule
 import dateutil.tz
-import io
-import datetime
-import socket
-import random  # for generating a UID
 
+from . import behavior
 from .base import (
-    VObjectError, NativeError, ValidateError, ParseError, VBase, Component,
-    ContentLine, logger, defaultSerialize, registerBehavior, backslashEscape,
-    foldOneLine, newFromBehavior, CRLF, LF, ascii
+    backslashEscape, Component, ContentLine, foldOneLine, logger, NativeError,
+    newFromBehavior, ParseError, registerBehavior, ValidateError, VObjectError
 )
+# symbols imported into namespace but unused locally
+from .base import ascii, CRLF, defaultSerialize, LF, VBase  # noqa
+
 
 #------------------------------- Constants ------------------------------------
 DATENAMES = ("rdate", "exdate")

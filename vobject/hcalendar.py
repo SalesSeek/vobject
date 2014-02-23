@@ -29,11 +29,11 @@ appropriately.
 </span>
 
 """
+import io
+from datetime import date, datetime, timedelta
 
 from .base import CRLF, registerBehavior
 from .icalendar import VCalendar2_0
-from datetime import date, datetime, timedelta
-import io
 
 
 class HCalendar(VCalendar2_0):

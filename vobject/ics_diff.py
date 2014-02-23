@@ -1,4 +1,7 @@
 """Compare VTODOs and VEVENTs in two iCalendar sources."""
+from optparse import OptionParser
+
+from . import base
 from .base import Component, getBehavior, newFromBehavior
 
 
@@ -182,8 +185,6 @@ def prettyDiff(leftObj, rightObj):
         print()
 
 
-from optparse import OptionParser
-from . import base
 
 
 def main():

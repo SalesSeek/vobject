@@ -1,17 +1,17 @@
 """Long or boring tests for vobjects."""
-
-import vobject
-from vobject import base, icalendar, vcard, hcalendar  # noqa
+import datetime  # noqa
+import doctest
 import io  # noqa
 import re  # noqa
-import dateutil.tz  # noqa
-import datetime  # noqa
-
-import doctest
-import test_vobject
 import unittest
 
+import dateutil.tz  # noqa
 from pkg_resources import resource_stream  # noqa
+
+import test_vobject
+import vobject
+from vobject import base, hcalendar, icalendar, vcard  # noqa
+
 
 base.logger.setLevel(base.logging.FATAL)
 #------------------- Testing and running functions ----------------------------

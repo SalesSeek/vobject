@@ -1,6 +1,7 @@
-import winreg
-import struct
 import datetime
+import struct
+import winreg
+
 
 handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
 tzparent = winreg.OpenKey(
