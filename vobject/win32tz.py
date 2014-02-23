@@ -2,21 +2,27 @@ import winreg
 import struct
 import datetime
 
-handle=winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
-tzparent=winreg.OpenKey(handle,
-            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones")
-parentsize=winreg.QueryInfoKey(tzparent)[0]
+handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+tzparent = winreg.OpenKey(
+    handle,
+    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"
+)
+parentsize = winreg.QueryInfoKey(tzparent)[0]
 
-localkey=winreg.OpenKey(handle,
-            "SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation")
-WEEKS=datetime.timedelta(7)
+localkey = winreg.OpenKey(
+    handle,
+    "SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"
+)
+WEEKS = datetime.timedelta(7)
+
 
 def list_timezones():
     """Return a list of all time zones known to the system."""
-    l=[]
+    l = []
     for i in range(parentsize):
         l.append(winreg.EnumKey(tzparent, i))
     return l
+
 
 class win32tz(datetime.tzinfo):
     """tzinfo class based on win32's timezones available in the registry.
@@ -36,7 +42,7 @@ class win32tz(datetime.tzinfo):
 
     """
     def __init__(self, name):
-        self.data=win32tz_data(name)
+        self.data = win32tz_data(name)
 
     def utcoffset(self, dt):
         if self._isdst(dt):
@@ -52,24 +58,31 @@ class win32tz(datetime.tzinfo):
             return datetime.timedelta(0)
 
     def tzname(self, dt):
-        if self._isdst(dt): return self.data.dstname
-        else: return self.data.stdname
+        if self._isdst(dt):
+            return self.data.dstname
+        else:
+            return self.data.stdname
 
     def _isdst(self, dt):
-        dat=self.data
+        dat = self.data
         dston = pickNthWeekday(dt.year, dat.dstmonth, dat.dstdayofweek,
                                dat.dsthour, dat.dstminute, dat.dstweeknumber)
         dstoff = pickNthWeekday(dt.year, dat.stdmonth, dat.stddayofweek,
                                 dat.stdhour, dat.stdminute, dat.stdweeknumber)
         if dston < dstoff:
-            if dston <= dt.replace(tzinfo=None) < dstoff: return True
-            else: return False
+            if dston <= dt.replace(tzinfo=None) < dstoff:
+                return True
+            else:
+                return False
         else:
-            if dstoff <= dt.replace(tzinfo=None) < dston: return False
-            else: return True
+            if dstoff <= dt.replace(tzinfo=None) < dston:
+                return False
+            else:
+                return True
 
     def __repr__(self):
         return "<win32tz - %s>" % self.data.display
+
 
 def pickNthWeekday(year, month, dayofweek, hour, minute, whichweek):
     """dayofweek == 0 means Sunday, whichweek > 4 means last instance"""
@@ -77,8 +90,9 @@ def pickNthWeekday(year, month, dayofweek, hour, minute, whichweek):
                               day=1)
     weekdayone = first.replace(day=((dayofweek - first.isoweekday()) % 7 + 1))
     for n in range(whichweek - 1, -1, -1):
-        dt=weekdayone + n * WEEKS
-        if dt.month == month: return dt
+        dt = weekdayone + n * WEEKS
+        if dt.month == month:
+            return dt
 
 
 class win32tz_data(object):
@@ -87,37 +101,37 @@ class win32tz_data(object):
     def __init__(self, path):
         """Load path, or if path is empty, load local time."""
         if path:
-            keydict=valuesToDict(winreg.OpenKey(tzparent, path))
+            keydict = valuesToDict(winreg.OpenKey(tzparent, path))
             self.display = keydict['Display']
             self.dstname = keydict['Dlt']
             self.stdname = keydict['Std']
 
             #see http://ww_winreg.jsiinc.com/SUBA/tip0300/rh0398.htm
             tup = struct.unpack('=3l16h', keydict['TZI'])
-            self.stdoffset = -tup[0]-tup[1] #Bias + StandardBias * -1
-            self.dstoffset = self.stdoffset - tup[2] # + DaylightBias * -1
+            self.stdoffset = -tup[0]-tup[1]  # Bias + StandardBias * -1
+            self.dstoffset = self.stdoffset - tup[2]  # + DaylightBias * -1
 
-            offset=3
+            offset = 3
             self.stdmonth = tup[1 + offset]
-            self.stddayofweek = tup[2 + offset] #Sunday=0
-            self.stdweeknumber = tup[3 + offset] #Last = 5
+            self.stddayofweek = tup[2 + offset]  # Sunday=0
+            self.stdweeknumber = tup[3 + offset]  # Last = 5
             self.stdhour = tup[4 + offset]
             self.stdminute = tup[5 + offset]
 
-            offset=11
+            offset = 11
             self.dstmonth = tup[1 + offset]
-            self.dstdayofweek = tup[2 + offset] #Sunday=0
-            self.dstweeknumber = tup[3 + offset] #Last = 5
+            self.dstdayofweek = tup[2 + offset]  # Sunday=0
+            self.dstweeknumber = tup[3 + offset]  # Last = 5
             self.dsthour = tup[4 + offset]
             self.dstminute = tup[5 + offset]
 
         else:
-            keydict=valuesToDict(localkey)
+            keydict = valuesToDict(localkey)
 
             self.stdname = keydict['StandardName']
             self.dstname = keydict['DaylightName']
 
-            sourcekey=winreg.OpenKey(tzparent, self.stdname)
+            sourcekey = winreg.OpenKey(tzparent, self.stdname)
             self.display = valuesToDict(sourcekey)['Display']
 
             self.stdoffset = -keydict['Bias']-keydict['StandardBias']
@@ -126,30 +140,33 @@ class win32tz_data(object):
             #see http://ww_winreg.jsiinc.com/SUBA/tip0300/rh0398.htm
             tup = struct.unpack('=8h', keydict['StandardStart'])
 
-            offset=0
+            offset = 0
             self.stdmonth = tup[1 + offset]
-            self.stddayofweek = tup[2 + offset] #Sunday=0
-            self.stdweeknumber = tup[3 + offset] #Last = 5
+            self.stddayofweek = tup[2 + offset]  # Sunday=0
+            self.stdweeknumber = tup[3 + offset]  # Last = 5
             self.stdhour = tup[4 + offset]
             self.stdminute = tup[5 + offset]
 
             tup = struct.unpack('=8h', keydict['DaylightStart'])
             self.dstmonth = tup[1 + offset]
-            self.dstdayofweek = tup[2 + offset] #Sunday=0
-            self.dstweeknumber = tup[3 + offset] #Last = 5
+            self.dstdayofweek = tup[2 + offset]  # Sunday=0
+            self.dstweeknumber = tup[3 + offset]  # Last = 5
             self.dsthour = tup[4 + offset]
             self.dstminute = tup[5 + offset]
 
+
 def valuesToDict(key):
     """Convert a registry key's values to a dictionary."""
-    dict={}
-    size=winreg.QueryInfoKey(key)[1]
+    dict = {}
+    size = winreg.QueryInfoKey(key)[1]
     for i in range(size):
-        dict[winreg.EnumValue(key, i)[0]]=winreg.EnumValue(key, i)[1]
+        dict[winreg.EnumValue(key, i)[0]] = winreg.EnumValue(key, i)[1]
     return dict
 
+
 def _test():
-    import win32tz, doctest
+    import win32tz
+    import doctest
     doctest.testmod(win32tz, verbose=0)
 
 if __name__ == '__main__':

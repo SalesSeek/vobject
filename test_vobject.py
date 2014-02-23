@@ -1,19 +1,27 @@
 """Long or boring tests for vobjects."""
 
 import vobject
-from vobject import base, icalendar, behavior, vcard, hcalendar
-import io, re, dateutil.tz, datetime
+from vobject import base, icalendar, vcard, hcalendar  # noqa
+import io  # noqa
+import re  # noqa
+import dateutil.tz  # noqa
+import datetime  # noqa
 
-import doctest, test_vobject, unittest
+import doctest
+import test_vobject
+import unittest
 
-from pkg_resources import resource_stream
+from pkg_resources import resource_stream  # noqa
 
 base.logger.setLevel(base.logging.FATAL)
-#------------------- Testing and running functions -----------------------------
+#------------------- Testing and running functions ----------------------------
 # named additional_tests for setuptools
+
+
 def additional_tests():
 
-    flags = doctest.NORMALIZE_WHITESPACE | doctest.REPORT_ONLY_FIRST_FAILURE | doctest.ELLIPSIS
+    flags = (doctest.NORMALIZE_WHITESPACE | doctest.REPORT_ONLY_FIRST_FAILURE
+             | doctest.ELLIPSIS)
     suite = unittest.TestSuite()
     for module in base, test_vobject, icalendar, vobject, vcard:
         suite.addTest(doctest.DocTestSuite(module, optionflags=flags))
@@ -29,7 +37,7 @@ if __name__ == '__main__':
     runner.run(additional_tests())
 
 
-testSilly="""
+testSilly = """
 sillyname:name
 profile:sillyprofile
 stuff:folded
@@ -38,7 +46,7 @@ stuff:folded
 but in practice probably ought to be, as it is exceptionally long, \
 and moreover demonstratively stupid"
 
-icaltest=r"""BEGIN:VCALENDAR
+icaltest = r"""BEGIN:VCALENDAR
 CALSCALE:GREGORIAN
 X-WR-TIMEZONE;VALUE=TEXT:US/Pacific
 METHOD:PUBLISH
@@ -80,7 +88,7 @@ END:DAYLIGHT
 END:VTIMEZONE
 END:VCALENDAR"""
 
-badDtStartTest="""BEGIN:VCALENDAR
+badDtStartTest = """BEGIN:VCALENDAR
 METHOD:PUBLISH
 VERSION:2.0
 BEGIN:VEVENT
@@ -91,7 +99,7 @@ UID:EC9439B1-FF65-11D6-9973-003065F99D04
 END:VEVENT
 END:VCALENDAR"""
 
-badLineTest="""BEGIN:VCALENDAR
+badLineTest = """BEGIN:VCALENDAR
 METHOD:PUBLISH
 VERSION:2.0
 BEGIN:VEVENT
@@ -102,7 +110,7 @@ UID:EC9439B1-FF65-11D6-9973-003065F99D04
 END:VEVENT
 END:VCALENDAR"""
 
-vcardtest =r"""BEGIN:VCARD
+vcardtest = r"""BEGIN:VCARD
 VERSION:3.0
 FN:Daffy Duck Knudson (with Bugs Bunny and Mr. Pluto)
 N:Knudson;Daffy Duck (with Bugs Bunny and Mr. Pluto)
@@ -296,8 +304,8 @@ END:VTIMEZONE
 
 """
 
-__test__ = { "Test readOne" :
-    r"""
+__test__ = {
+    "Test readOne": r"""
     >>> silly = base.readOne(testSilly, findBegin=False)
     >>> silly
     <SILLYPROFILE| [<MORESTUFF{}this line is not folded, but in practice probably ought to be, as it is exceptionally long, and moreover demonstratively stupid>, <SILLYNAME{}name>, <STUFF{}foldedline>]>
@@ -316,8 +324,7 @@ __test__ = { "Test readOne" :
     'CN:Babs Jensen\r\nCN:Barbara J Jensen\r\nEMAIL:babs@umich.edu\r\nPHONE:+1 313 747-4454\r\nSN:Jensen\r\nX-ID:1234567890\r\n'
     """,
 
-    "Import icaltest" :
-    r"""
+    "Import icaltest": r"""
     >>> c = base.readOne(icaltest, validate=True)
     >>> c.vevent.valarm.trigger
     <TRIGGER{}-1 day, 0:00:00>
@@ -336,8 +343,7 @@ __test__ = { "Test readOne" :
     <RRULE{}FREQ=Weekly;COUNT=10>
     """,
 
-    "Parsing tests" :
-    """
+    "Parsing tests": """
     >>> parseRDate = icalendar.MultiDateBehavior.transformToNative
     >>> icalendar.stringToTextValues('')
     ['']
@@ -353,8 +359,7 @@ __test__ = { "Test readOne" :
     <RDATE{'VALUE': ['PERIOD']}[(datetime.datetime(1996, 4, 3, 2, 0, tzinfo=tzutc()), datetime.datetime(1996, 4, 3, 4, 0, tzinfo=tzutc())), (datetime.datetime(1996, 4, 4, 1, 0, tzinfo=tzutc()), datetime.timedelta(0, 10800))]>
     """,
 
-    "read failure" :
-    """
+    "read failure": """
     >>> vevent = base.readOne(badstream)
     Traceback (most recent call last):
     ...
@@ -372,8 +377,7 @@ __test__ = { "Test readOne" :
     <X-BAD-UNDERSCORE{}TRUE>
     """,
 
-    "ical trigger workaround" :
-    """
+    "ical trigger workaround": """
 
     >>> badical = base.readOne(icalWeirdTrigger)
     >>> badical.vevent.valarm.description.value
@@ -382,8 +386,7 @@ __test__ = { "Test readOne" :
     datetime.datetime(2002, 10, 28, 12, 0, tzinfo=tzutc())
     """,
 
-    "unicode test" :
-    r"""
+    "unicode test": r"""
     >>> f = resource_stream(__name__, 'test_files/utf8_test.ics')
     >>> vevent = base.readOne(f).vevent
     >>> vevent.summary.value
@@ -394,8 +397,7 @@ __test__ = { "Test readOne" :
 
     # make sure date valued UNTILs in rrules are in a reasonable timezone,
     # and include that day (12/28 in this test)
-    "recurrence test" :
-    r"""
+    "recurrence test": r"""
     >>> f = resource_stream(__name__, 'test_files/recurrence.ics')
     >>> cal = base.readOne(f)
     >>> dates = list(cal.vevent.rruleset)
@@ -407,9 +409,7 @@ __test__ = { "Test readOne" :
     datetime.datetime(2006, 12, 28, 23, 0, tzinfo=tzutc())
     """,
 
-
-    "regular expression test" :
-    """
+    "regular expression test": """
     >>> re.findall(base.patterns['name'], '12foo-bar:yay')
     ['12foo-bar', 'yay']
     >>> re.findall(base.patterns['safe_char'], 'a;b"*,cd')
@@ -427,9 +427,7 @@ __test__ = { "Test readOne" :
     ';ALTREP="http://www.wiz.org"'
     """,
 
-    "VTIMEZONE creation test:" :
-
-    """
+    "VTIMEZONE creation test:": """
     >>> f = io.StringIO(timezones)
     >>> tzs = dateutil.tz.tzical(f)
     >>> tzs.get("US/Pacific")
@@ -504,9 +502,7 @@ __test__ = { "Test readOne" :
     END:VTIMEZONE
     """,
 
-    "Create iCalendar from scratch" :
-
-    """
+    "Create iCalendar from scratch": """
     >>> cal = base.newFromBehavior('vcalendar', '2.0')
     >>> cal.add('vevent')
     <VEVENT| []>
@@ -528,9 +524,7 @@ __test__ = { "Test readOne" :
     END:VCALENDAR
     """,
 
-    "Serializing with timezones test" :
-
-    """
+    "Serializing with timezones test": """
     >>> from dateutil.rrule import rrule, rruleset, WEEKLY, MONTHLY
     >>> pacific = dateutil.tz.tzical(io.StringIO(timezones)).get('US/Pacific')
     >>> cal = base.Component('VCALENDAR')
@@ -631,17 +625,13 @@ __test__ = { "Test readOne" :
     END:VCALENDAR
     """,
 
-    "Handling DATE without a VALUE=DATE" :
-
-    """
+    "Handling DATE without a VALUE=DATE": """
     >>> cal = base.readOne(badDtStartTest)
     >>> cal.vevent.dtstart.value
     datetime.date(2002, 10, 28)
     """,
 
-    "Serializing iCalendar to hCalendar" :
-
-    """
+    "Serializing iCalendar to hCalendar": """
     >>> cal = base.newFromBehavior('hcalendar')
     >>> cal.behavior
     <class 'vobject.hcalendar.HCalendar'>
@@ -678,9 +668,7 @@ __test__ = { "Test readOne" :
     </span>
     """,
 
-    "Generate UIDs automatically test:" :
-
-    """
+    "Generate UIDs automatically test:": """
     >>> cal = base.newFromBehavior('vcalendar')
     >>> cal.add('vevent').add('dtstart').value = datetime.datetime(2006,2,2,10)
     >>> ser = cal.serialize()
@@ -688,9 +676,7 @@ __test__ = { "Test readOne" :
     1
     """,
 
-    "VCARD 3.0 parse test:" :
-
-    r"""
+    "VCARD 3.0 parse test:": r"""
     >>> card = base.readOne(vcardtest)
     >>> card.adr.value
     <Address: Haight Street 512;\nEscape, Test\nNovosibirsk,  80214\nGnuland>
@@ -718,9 +704,7 @@ __test__ = { "Test readOne" :
     END:VCARD
     """,
 
-    "Multi-text serialization test:" :
-
-    """
+    "Multi-text serialization test:": """
     >>> category = base.newFromBehavior('categories')
     >>> category.value = ['Random category']
     >>> print(category.serialize().strip())
@@ -730,18 +714,14 @@ __test__ = { "Test readOne" :
     CATEGORIES:Random category,Other category
     """,
 
-    "Semi-colon separated multi-text serialization test:" :
-
-    """
+    "Semi-colon separated multi-text serialization test:": """
     >>> requestStatus = base.newFromBehavior('request-status')
     >>> requestStatus.value = ['5.1', 'Service unavailable']
     >>> print(requestStatus.serialize().strip())
     REQUEST-STATUS:5.1;Service unavailable
     """,
 
-    "vCard groups test:" :
-
-    """
+    "vCard groups test:": """
     >>> card = base.readOne(vcardWithGroups)
     >>> card.group
     'home'
@@ -760,17 +740,13 @@ __test__ = { "Test readOne" :
     vobject.base.VObjectError: "<DTSTART{}> has a group, but this object doesn't support groups"
     """,
 
-    "Lowercase components test:" :
-
-    """
+    "Lowercase components test:": """
     >>> card = base.readOne(lowercaseComponentNames)
     >>> card.version
     <VERSION{}2.1>
     """,
 
-    "Default behavior test" :
-
-    """
+    "Default behavior test": """
     >>> card = base.readOne(vcardWithGroups)
     >>> base.getBehavior('note') == None
     True
@@ -780,4 +756,4 @@ __test__ = { "Test readOne" :
     The Mayor of the great city of  Goerlitz in the great country of Germany.
     Next line.
     """
-    }
+}

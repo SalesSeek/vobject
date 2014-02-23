@@ -2,7 +2,8 @@
 
 from . import base
 
-#------------------------ Abstract class for behavior --------------------------
+
+#------------------------ Abstract class for behavior -------------------------
 class Behavior(object):
     """Abstract class to describe vobject options, requirements and encodings.
 
@@ -16,16 +17,16 @@ class Behavior(object):
         The uppercase name of the object described by the class, or a generic
         name if the class defines behavior for many objects.
     @cvar description:
-        A brief excerpt from the RFC explaining the function of the component or
-        line.
+        A brief excerpt from the RFC explaining the function of the component
+        or line.
     @cvar versionString:
-        The string associated with the component, for instance, 2.0 if there's a
-        line like VERSION:2.0, an empty string otherwise.
+        The string associated with the component, for instance, 2.0 if there's
+        a line like VERSION:2.0, an empty string otherwise.
     @cvar knownChildren:
         A dictionary with uppercased component/property names as keys and a
         tuple (min, max, id) as value, where id is the id used by
-        L{registerBehavior}, min and max are the limits on how many of this child
-        must occur.  None is used to denote no max or no id.
+        L{registerBehavior}, min and max are the limits on how many of this
+        child must occur.  None is used to denote no max or no id.
     @cvar quotedPrintable:
         A boolean describing whether the object should be encoded and decoded
         using quoted printable line folding and character escaping.
@@ -40,21 +41,22 @@ class Behavior(object):
         The lower-case list of children which should come first when sorting.
     @cvar allowGroup:
         Whether or not vCard style group prefixes are allowed.
+
     """
-    name=''
-    description=''
-    versionString=''
+    name = ''
+    description = ''
+    versionString = ''
     knownChildren = {}
     quotedPrintable = False
     defaultBehavior = None
-    hasNative= False
+    hasNative = False
     isComponent = False
     allowGroup = False
     forceUTC = False
     sortFirst = []
 
     def __init__(self):
-        err="Behavior subclasses are not meant to be instantiated"
+        err = "Behavior subclasses are not meant to be instantiated"
         raise base.VObjectError(err)
 
     @classmethod
@@ -73,7 +75,8 @@ class Behavior(object):
 
         """
         if not cls.allowGroup and obj.group is not None:
-            err = str(obj) + " has a group, but this object doesn't support groups"
+            err = (str(obj)
+                   + " has a group, but this object doesn't support groups")
             raise base.VObjectError(err)
         if isinstance(obj, base.ContentLine):
             return cls.lineValidate(obj, raiseException, complainUnrecognized)
@@ -82,15 +85,15 @@ class Behavior(object):
             for child in obj.getChildren():
                 if not child.validate(raiseException, complainUnrecognized):
                     return False
-                name=child.name.upper()
+                name = child.name.upper()
                 count[name] = count.get(name, 0) + 1
             for key, val in cls.knownChildren.items():
-                if count.get(key,0) < val[0]:
+                if count.get(key, 0) < val[0]:
                     if raiseException:
                         m = "%s components must contain at least %i %s"
                         raise base.ValidateError(m % (cls.name, val[0], key))
                     return False
-                if val[1] and count.get(key,0) > val[1]:
+                if val[1] and count.get(key, 0) > val[1]:
                     if raiseException:
                         m = "%s components cannot contain more than %i %s"
                         raise base.ValidateError(m % (cls.name, val[1], key))
@@ -107,11 +110,13 @@ class Behavior(object):
 
     @classmethod
     def decode(cls, line):
-        if line.encoded: line.encoded=0
+        if line.encoded:
+            line.encoded = 0
 
     @classmethod
     def encode(cls, line):
-        if not line.encoded: line.encoded=1
+        if not line.encoded:
+            line.encoded = 1
 
     @classmethod
     def transformToNative(cls, obj):
@@ -145,7 +150,8 @@ class Behavior(object):
         """
 
         cls.generateImplicitParameters(obj)
-        if validate: cls.validate(obj, raiseException=True)
+        if validate:
+            cls.validate(obj, raiseException=True)
 
         if obj.isNative:
             transformed = obj.transformFromNative()
@@ -155,10 +161,11 @@ class Behavior(object):
             undoTransform = False
 
         out = base.defaultSerialize(transformed, buf, lineLength)
-        if undoTransform: obj.transformToNative()
+        if undoTransform:
+            obj.transformToNative()
         return out
 
     @classmethod
-    def valueRepr( cls, line ):
+    def valueRepr(cls, line):
         """return the representation of the given content line value"""
         return line.value

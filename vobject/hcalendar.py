@@ -16,7 +16,8 @@ LOCATION:Argent Hotel\, San Francisco\, CA
 END:VEVENT
 END:VCALENDAR
 
-and an equivalent event in hCalendar format with various elements optimized appropriately.
+and an equivalent event in hCalendar format with various elements optimized
+appropriately.
 
 <span class="vevent">
  <a class="url" href="http://www.web2con.com/">
@@ -26,24 +27,27 @@ and an equivalent event in hCalendar format with various elements optimized appr
  at the <span class="location">Argent Hotel, San Francisco, CA</span>
  </a>
 </span>
+
 """
 
-from .base import foldOneLine, CRLF, registerBehavior
+from .base import CRLF, registerBehavior
 from .icalendar import VCalendar2_0
 from datetime import date, datetime, timedelta
 import io
+
 
 class HCalendar(VCalendar2_0):
     name = 'HCALENDAR'
 
     @classmethod
     def serialize(cls, obj, buf=None, lineLength=None, validate=True):
-        """
-        Serialize iCalendar to HTML using the hCalendar microformat (http://microformats.org/wiki/hcalendar)
+        """Serialize iCalendar to HTML using the hCalendar microformat
+        (http://microformats.org/wiki/hcalendar)
+
         """
 
         outbuf = buf or io.StringIO()
-        level = 0 # holds current indentation level
+        level = 0  # holds current indentation level
         tabwidth = 3
 
         def indent():
@@ -76,16 +80,16 @@ class HCalendar(VCalendar2_0):
             if dtstart:
                 if type(dtstart) == date:
                     timeformat = "%A, %B %e"
-                    machine    = "%Y%m%d"
+                    machine = "%Y%m%d"
                 elif type(dtstart) == datetime:
                     timeformat = "%A, %B %e, %H:%M"
-                    machine    = "%Y%m%dT%H%M%S%z"
+                    machine = "%Y%m%dT%H%M%S%z"
 
                 #TODO: Handle non-datetime formats?
                 #TODO: Spec says we should handle when dtstart isn't included
 
                 out('<abbr class="dtstart", title="%s">%s</abbr>\r\n' %
-                     (dtstart.strftime(machine), dtstart.strftime(timeformat)))
+                    (dtstart.strftime(machine), dtstart.strftime(timeformat)))
 
                 # DTEND
                 dtend = event.getChildValue("dtend")
@@ -97,12 +101,13 @@ class HCalendar(VCalendar2_0):
 
                 if dtend:
                     human = dtend
-                    # TODO: Human readable part could be smarter, excluding repeated data
+                    # TODO: Human readable part could be smarter, excluding
+                    # repeated data
                     if type(dtend) == date:
                         human = dtend - timedelta(days=1)
 
                     out('- <abbr class="dtend", title="%s">%s</abbr>\r\n' %
-                     (dtend.strftime(machine), human.strftime(timeformat)))
+                        (dtend.strftime(machine), human.strftime(timeformat)))
 
             # LOCATION
             location = event.getChildValue("location")
@@ -111,14 +116,15 @@ class HCalendar(VCalendar2_0):
 
             description = event.getChildValue("description")
             if description:
-                out('<div class="description">' + description + '</div>' + CRLF)
+                out('<div class="description">' + description + '</div>'
+                    + CRLF)
 
             if url:
                 level -= 1
                 out('</a>' + CRLF)
 
             level -= 1
-            out('</span>' + CRLF) # close vevent
+            out('</span>' + CRLF)  # close vevent
 
         return buf or outbuf.getvalue()
 
