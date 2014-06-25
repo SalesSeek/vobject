@@ -52,7 +52,7 @@ from setuptools import find_packages, setup
 doclines = __doc__.splitlines()
 
 setup(
-    name="vobject",
+    name="vobject3",
     version="0.8.1c",
     author="Jeffrey Harris",
     author_email="jeffrey@osafoundation.org",
