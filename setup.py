@@ -46,9 +46,6 @@ For older changes, see
    - http://websvn.osafoundation.org/listing.php?repname=vobject&path=/trunk/
 
 """
-from ez_setup import use_setuptools
-use_setuptools()
-
 from setuptools import find_packages, setup
 
 
